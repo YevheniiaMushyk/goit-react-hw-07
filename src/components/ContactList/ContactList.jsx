@@ -6,7 +6,11 @@ import { selectContacts, selectFilterName } from "../../redux/selectors";
 const ContactList = () => {
 	const selectContactsState = useSelector(selectContacts);
 	const selectNameFilter = useSelector(selectFilterName);
-	const filteredContacts = selectContactsState.filter((contact) => contact.name.toLowerCase().includes(selectNameFilter.toLowerCase()));
+	let filteredContacts = [];
+
+	if (Array.isArray(selectContactsState)) {
+		filteredContacts = selectContactsState.filter((contact) => contact.name.toLowerCase().includes(selectNameFilter.toLowerCase()));
+	}
 
 	return (
 		<ul className={css.list}>

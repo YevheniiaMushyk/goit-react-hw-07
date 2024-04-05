@@ -1,52 +1,47 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { nanoid } from "nanoid";
-import { fetchContacts } from "./contactsOps";
-import contactsInitialState from "../components/ContactList/contacs.json";
+import { addContact, fetchContacts, deleteContact } from "./contactsOps";
+
+const handlePending = (state) => {
+	state.isLoading = true;
+};
+
+const handleRejected = (state, action) => {
+	state.isLoading = false;
+	state.error = action.payload;
+};
 
 const contactsSlice = createSlice({
 	name: "contacts",
 	initialState: {
-		items: contactsInitialState,
-		loading: false,
+		items: fetchContacts,
+		isLoading: false,
 		error: null,
-	},
-	reducers: {
-		addContact: {
-			reducer(state, action) {
-				state.items.push(action.payload);
-			},
-			prepare(contact) {
-				return {
-					payload: {
-						id: nanoid(),
-						name: contact.name,
-						number: contact.number,
-					},
-				};
-			},
-		},
-		deleteContact(state, action) {
-			const index = state.items.findIndex((contact) => contact.id === action.payload);
-			state.items.splice(index, 1);
-		},
 	},
 	extraReducers: (builder) => {
 		builder
-			.addCase(fetchContacts.pending, (state, action) => {
-				state.isLoading = true;
-			})
+			.addCase(fetchContacts.pending, handlePending)
 			.addCase(fetchContacts.fulfilled, (state, action) => {
 				state.isLoading = false;
 				state.error = null;
 				state.items = action.payload;
 			})
-			.addCase(fetchContacts.rejected, (state, action) => {
+			.addCase(fetchContacts.rejected, handleRejected)
+			.addCase(addContact.pending, handlePending)
+			.addCase(addContact.fulfilled, (state, action) => {
 				state.isLoading = false;
-				state.error = action.payload;
-			});
+				state.error = null;
+				state.items.push(action.payload);
+			})
+			.addCase(addContact.rejected, handleRejected)
+			.addCase(deleteContact.pending, handlePending)
+			.addCase(deleteContact.fulfilled, (state, action) => {
+				state.isLoading = false;
+				state.error = null;
+				const index = state.items.findIndex((contact) => contact.id === action.payload.id);
+				state.items.splice(index, 1);
+			})
+			.addCase(deleteContact.rejected, handleRejected);
 	},
 });
 
-// Експортуємо генератори екшенів та редюсер
-export const { addContact, deleteContact } = contactsSlice.actions;
 export const contactReducer = contactsSlice.reducer;
